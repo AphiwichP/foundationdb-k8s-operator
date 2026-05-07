@@ -1,0 +1,27 @@
+apiVersion: apps.foundationdb.org/v1beta2
+kind: FoundationDBBackup
+metadata:
+  name: fdb-backup
+  namespace: fdb-operator
+spec:
+  backupState: Running
+  agentCount: 2
+  version: 7.3.69
+  clusterName: fdb-cluster
+  blobStoreConfiguration:
+    accountName: minioadmin:minioadmin@minio:9000
+    bucket: fdb-backup
+    urlParameters:
+      - "region=us-east-1"
+      - "sc=0"
+  podTemplateSpec:
+    spec: 
+      containers:
+      - name: foundationdb 
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi

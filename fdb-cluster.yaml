@@ -1,0 +1,60 @@
+apiVersion: apps.foundationdb.org/v1beta2
+kind: FoundationDBCluster
+metadata:
+  name: fdb-cluster
+  namespace: fdb-operator
+spec:
+  version: 7.3.69
+  databaseConfiguration:
+    redundancy_mode: double
+  faultDomain:
+    key: foundationdb.org/none
+  processCounts:
+    stateless: -1
+    cluster_controller: 1
+  processes:
+    general:
+      customParameters:
+        - knob_disable_posix_kernel_aio=1
+      podTemplate:
+        spec:
+          serviceAccountName: fdb-kubernetes
+          containers:
+            - name: foundationdb
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+              securityContext:
+                runAsUser: 0
+            - name: foundationdb-kubernetes-sidecar
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+              securityContext:
+                runAsUser: 0
+      volumeClaimTemplate:
+        spec:
+          storageClassName: standard-rwo
+          resources:
+            requests:
+              storage: 16G
+  automationOptions:
+    replacements:
+      enabled: true
+  labels:
+    filterOnOwnerReference: false
+    matchLabels:
+      foundationdb.org/fdb-cluster-name: fdb-cluster
+    processClassLabels:
+      - foundationdb.org/fdb-process-class
+    processGroupIDLabels:
+      - foundationdb.org/fdb-process-group-id
+  minimumUptimeSecondsForBounce: 60
+  routing:
+    defineDNSLocalityFields: true
+  sidecarContainer:
+    enableLivenessProbe: true
+    enableReadinessProbe: false
+  useExplicitListenAddress: true
